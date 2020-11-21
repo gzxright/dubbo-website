@@ -142,70 +142,85 @@ public class DemoServiceImpl implements DemoService {
 
 ![/dev-guide/images/dubbo_protocol_header.jpg](/imgs/dev/dubbo_protocol_header.png)
 
+Magic - Magic High & Magic Low (16 bits)
 
-- Magic - Magic High & Magic Low (16 bits)
-  
-  Identifies dubbo protocol with value: 0xdabb
-  
-- Req/Res (1 bit)
-  
-  Identifies this is a request or response. Request - 1; Response - 0.
-  
-- 2 Way (1 bit)
-  
-  Only useful when Req/Res is 1 (Request), expect for a return value from server or not. Set to 1 if need a return value from server.
-  
-- Event (1 bit)
-  
-  Identifies an event message or not, for example, heartbeat event. Set to 1 if this is an event.
-  
-- Serialization ID (5 bit)
-  
-  Identifies serialization type: the value for fastjson is 6.
-  
-- Status (8 bits)
-  
-  Only useful when  Req/Res is 0 (Response), identifies the status of response
-  
-  - 20 - OK
-  - 30 - CLIENT_TIMEOUT
-  - 31 - SERVER_TIMEOUT
-  - 40 - BAD_REQUEST
-  - 50 - BAD_RESPONSE
-  - 60 - SERVICE_NOT_FOUND
-  - 70 - SERVICE_ERROR
-  - 80 - SERVER_ERROR
-  - 90 - CLIENT_ERROR
-  - 100 - SERVER_THREADPOOL_EXHAUSTED_ERROR
-    
-- Request ID (64 bits)
-  
-  Identifies an unique request. Numeric (long).
-  
-- Data Length (32)
-  
-  Length of the content (the variable part) after serialization, counted by bytes. Numeric (integer).
-  
-- Variable Part
-  
-  Each part is a byte[] after serialization with specific serialization type, identifies by Serialization ID.
-  
-Every part is a byte[] after serialization with specific serialization type, identifies by Serialization ID
+魔数 - 高位魔数/8字节 & 低位魔数/字节 (16 字节)
 
-1. If the content is a Request (Req/Res = 1), each part consists of the content, in turn is:
-   - Dubbo version
-   - Service name
-   - Service version
-   - Method name
-   - Method parameter types
-   - Method arguments
-   - Attachments 
+类似java字节码文件里的魔数，用来判断是不是dubbo协议的数据包。魔数是常量0xdabb,用于判断报文的开始。
 
-1. If the content is a Response (Req/Res = 0), each part consists of the content, in turn is:
-   - Return value type, identifies what kind of value returns from server side: RESPONSE_NULL_VALUE - 2, RESPONSE_VALUE - 1, RESPONSE_WITH_EXCEPTION - 0.
-   -  Return value, the real value returns from server.
+Req/Res (1 bit)
 
+请求/返回 (1 字节)
 
+请求/响应标识。请求- 1;响应- 0。
+
+2 Way (1 bit)
+
+两条路 (1 字节)
+
+只有当Req/Res为1(请求)时才有用，不管是否从服务器返回值。如果需要从服务器返回值，设置为1。
+
+Event (1 bit)
+
+事件 (1 字节)
+
+标识事件类型:例如心跳事件的值为1
+
+Serialization ID (5 bit)
+
+序列化 ID (5 字节)
+
+标识序列化类型:fastjson的值为6。
+
+Status (8 bits)
+
+状态码 (8 字节)
+
+只有当Req/Res为0(响应)时才有用，它标识响应的状态
+
+20 - OK
+30 - CLIENT_TIMEOUT/客户端超时
+31 - SERVER_TIMEOUT/服务器超时
+40 - BAD_REQUEST/错误的请求
+50 - BAD_RESPONSE/错误的回复
+60 - SERVICE_NOT_FOUND/服务未找到
+70 - SERVICE_ERROR/服务错误
+80 - SERVER_ERROR/服务器错误
+90 - CLIENT_ERROR/客户端错误
+100 - SERVER_THREADPOOL_EXHAUSTED_ERROR/服务器线程池耗尽错误
+Request ID (64 bits)
+
+请求 ID (64 字节)
+
+唯一请求标识。 Numeric (long).
+
+Data Length (32 bits)
+
+数据长度 (32 字节)
+
+内容(可变部分)序列化后的长度，按字节计算。 Numeric(integer).
+
+Variable Part
+
+可变部分
+
+每个部分是序列化后的一个字节[]，具有特定的序列化类型，由序列化ID标识.
+
+每个部分是序列化后的一个字节[]，具有特定的序列化类型，由序列化ID标识.
+
+如果内容是一个请求(Req/Res = 1)，则每个部分由内容依次组成
+
+Dubbo version/版本
+Service name
+Service version
+Method name
+Method parameter types/参数类型
+Method arguments
+Attachments/附件
+如果内容是一个请求(Req/Res = 1)，则每个部分由内容依次组成
+
+返回值类型，标识从服务器端返回的值类型:RESPONSE_NULL_VALUE/响应为空 - 2，RESPONSE_VALUE/响应正常 - 1, RESPONSE_WITH_EXCEPTION/响应异常 - 0。
+返回值，实际值从服务器返回。
 **注意：**对于(Variable Part)变长部分，当前版本的dubbo框架使用json序列化时，在每部分内容间额外增加了换行符作为分隔，请选手在Variable Part的每个part后额外增加换行符， 如：
 ```
 Dubbo version bytes (换行符)
